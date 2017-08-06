@@ -89,7 +89,7 @@ class Controller_API extends Controller
 
 // /venue or /venues
 Route::set('venues', 'venue(s)')->defaults([
-    'controller' => 'APIS',
+    'controller' => 'API',
     'action' => 'venues',
 ]);
 
