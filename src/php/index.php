@@ -21,9 +21,23 @@ class Controller_API extends Controller
         */
     public function action_venues()
     {
-        $result = ORM::factory('Venue')
-        ->find_all();
-        $this->response->json($result);
+        $results = ORM::factory('Item')->with('venue')->find_all();
+
+        $venues = [];
+        foreach ($results as $item) {
+            $venue = @$venues[$item->venue->id];
+            if (empty($venue)) {
+                $venue = new stdClass;
+                $venue->id = $item->venue->id;
+                $venue->name = $item->venue->name;
+                $venue->items = [];
+            }
+
+            $venue->items[] = $item->name;
+            $venues[$item->venue->id] = $venue;
+        }
+
+        $this->response->json(array_values($venues));
     }
 
     /**
@@ -40,7 +54,7 @@ class Controller_API extends Controller
         $items = $result
             ->items
             ->find_all();
-        
+
         $venue = [
             'bookingId' => $result->id,
             'bookerName' => $result->name,
