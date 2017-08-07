@@ -15,12 +15,15 @@ ORM::setWithSeparator('__');
 class Controller_API extends Controller
 {
     /**
-        * Get list of venues
-        *
-        * @see Controller_API::rows
-        */
+    * Get list of venues
+    *
+    * @see Controller_API::rows
+    */
     public function action_venues()
     {
+        // Another option would be to build the query by hand like
+        //      ORM::factory('Venue')->join('items', 'INNER')->on('venue_id', '=', 'venues.id')
+        // I went with this one to take advantadge of ORM relations
         $results = ORM::factory('Item')->with('venue')->find_all();
 
         $venues = [];
@@ -41,36 +44,43 @@ class Controller_API extends Controller
     }
 
     /**
-        * Get a venue
-        *
-        * @see Controller_API::rows
-        */
+    * Get a venue
+    *
+    * @see Controller_API::rows
+    */
     public function action_venue()
     {
-        $result = ORM::factory('Venue')
-            ->where('Venue.id', '=', (int) $this->request->param('id'))
-            ->find();
+        $venue = new stdClass;
+        $venue->bookingId = null;
+        $venue->bookerName = null;
+        $venue->items = [];
 
-        $items = $result
-            ->items
+        // Changed this query to perform only one call
+        $results = ORM::factory('Item')
+            ->with('venue')
+            ->with('product')
+            ->with('space')
+            ->where('venue_id', '=', (int) $this->request->param('id'))
             ->find_all();
 
-        $venue = [
-            'bookingId' => $result->id,
-            'bookerName' => $result->name,
-            'items' => []
-        ];
 
-        foreach ($items as $item) {
-            $venue['items'][] = [
-                'id' => $item->id,
-                'name' => $item->name,
-                $item->space,
-                $item->product
-            ];
+        if (count($results) === 0) {
+            return $this->response->json($venue);
+        }
+        $venue->bookingId = $results[0]->get('venue')->id;
+        $venue->bookerName = $results[0]->get('venue')->name;
+
+        foreach($results as $result) {
+            $item = new stdClass();
+            $item->id = $result->id;
+            $item->name = $result->name;
+            $item->space = $result->get('space');
+            $item->product = $result->get('product');
+
+            $venue->items[] = $item;
         }
 
-        $this->response->json($venue);
+        return $this->response->json($venue);
     }
 
     /**

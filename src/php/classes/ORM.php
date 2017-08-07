@@ -3,10 +3,15 @@
 class ORM extends Kohana_ORM implements JsonSerializable
 {
     static protected $_with_separator = ':';
+    static private $typesMapping = [
+        'int' => 'int',
+        'VARCHAR(255)' => 'string',
+        'float' => 'float'
+    ];
 
     /**
         * JSON data
-        * 
+        *
         * @return array
         */
     public function jsonSerialize()
@@ -16,7 +21,7 @@ class ORM extends Kohana_ORM implements JsonSerializable
 
     /**
         * Set with separator
-        * 
+        *
         * @param string $separator
         */
     public static function setWithSeparator($separator)
@@ -26,7 +31,7 @@ class ORM extends Kohana_ORM implements JsonSerializable
 
     /**
         * Translate column name to underscore name
-        * 
+        *
         * @param string $column
         * @return string
         */
@@ -43,13 +48,13 @@ class ORM extends Kohana_ORM implements JsonSerializable
         {
             $column = str_replace(':', static::$_with_separator, $column);
         }
-        
+
         return $column;
     }
 
     /**
         * Get with camel case support
-        * 
+        *
         * @param string $column
         * @return mixed
         */
@@ -61,7 +66,7 @@ class ORM extends Kohana_ORM implements JsonSerializable
 
     /**
         * Set with camel case support
-        * 
+        *
         * @param string $column
         * @param mixed $value
         * @return ORM This
@@ -225,5 +230,21 @@ class ORM extends Kohana_ORM implements JsonSerializable
         }
 
         return $this;
+    }
+
+    public function get($column)
+    {
+        $data = parent::get($column);
+        $columnInfo = @$this->_table_columns[$column];
+
+        if (!empty($columnInfo) && !empty($columnInfo['type'])) {
+            $castType = self::$typesMapping[$columnInfo['type']];
+            if (!empty($castType)) {
+                settype($data, $castType);
+            }
+        }
+
+        return $data;
+
     }
 }
