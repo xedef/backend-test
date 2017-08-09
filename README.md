@@ -32,9 +32,13 @@ We now need to migrate all this code to a Node application that:
 You're free to use any dependencies/frameworks you want, there is a folder that you can use to put your code `src/node`. But do make sure that it works on Node 8 and to include instructions on how to run it.
 
 > **How to run**
+>
 > `cd src/node`
+>
 > `yarn install` (or `npm install`)
+>
 > `yarn start` (or `npm run start`)
+
 
 #### Nice 2 Have
 
